@@ -5,6 +5,7 @@
 //! *Documentation:* No help received
 
 use std::fs;
+use std::time::Instant;
 use itertools::Itertools;
 use md5::{Digest, Md5};
 
@@ -12,6 +13,7 @@ fn main() {
     let sample = fs::read("samplefile.txt").unwrap();
     let mut contract = fs::read("contract.txt").unwrap();
 
+    let mut t = Instant::now();
     let mut hasher = Md5::new();
     hasher.update(sample.clone());
     let target_md5 = u128::from_be_bytes(hasher.clone().finalize().into());
@@ -28,7 +30,8 @@ fn main() {
 
             if new_tinyhash == target_tinyhash {
                 let filename = format!("collisions/sample_{}.txt", collisions.len() + 1);
-                println!("Found collision {:?}, saving as {}", c, filename);
+                println!("Found collision {:?} in {:?}, saving as {}", c, t.elapsed(), filename);
+                t = Instant::now();
                 collisions.push(c.clone());
 
                 let mut file_data = sample.clone();
@@ -43,6 +46,7 @@ fn main() {
         length += 1;
     }
 
+    let t = Instant::now();
     let mut hasher = Md5::new();
     hasher.update(contract.clone());
     let target_md5 = u128::from_be_bytes(hasher.clone().finalize().into());
@@ -55,21 +59,18 @@ fn main() {
     contract.pop().unwrap();
     let mut hasher2 = Md5::new();
     hasher2.update(contract.clone());
-    for n in 0..<100000 {
+    for n in 0..100000 {
         let mut h = hasher2.clone();
         h.update(n.to_string().as_bytes());
         let new_md5 = u128::from_be_bytes(h.finalize().into());
         let new_tinyhash = new_md5 >> 108;
 
         if new_tinyhash == target_tinyhash {
-            println!("Found collision using ${}", n);
-
             let filename = format!("collisions/contract_{}.txt", n);
-
+            println!("Found collision using ${} in {:?}, saving as {}", n, t.elapsed(), filename);
             let mut file_data = contract.clone();
             file_data.extend(n.to_string().as_bytes());
             fs::write(filename, file_data).unwrap();
-
             break;
         }
     }
