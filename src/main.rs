@@ -1,3 +1,9 @@
+//! **CYS431 PEX2**
+//!
+//! *Author:* Ethan Chapman
+//!
+//! *Documentation:* No help received
+
 use std::fs;
 use itertools::Itertools;
 use md5::{Digest, Md5};
